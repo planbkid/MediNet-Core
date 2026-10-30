@@ -1,0 +1,15 @@
+# Entorno virtual: es pesado y cada integrante lo crea en su equipo
+.venv/
+# Archivos temporales que Python genera solo
+__pycache__/
+*.pyc
+# AQUÍ irán las contraseñas de la BD: nunca deben llegar a GitHub
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+.env.containers
+.env.docker
+.local-containers/
+*.pem
+*.key

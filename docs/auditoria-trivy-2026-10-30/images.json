@@ -1,0 +1,18 @@
+[
+  {
+    "name": "api",
+    "reference": "localhost/medinet-pac:local-20261030",
+    "image_id": "0343ffca9f000f2831b59b4b6c8ba7f2db4bef16186d24a3c484a853062ee681",
+    "archive": ".local-containers/trivy-audit-2026-10-30/api.tar",
+    "archive_sha256": "615747ad77d2eb821ea983e6e9f94b96792007125f848ac434415c94b98dbc2c",
+    "manifest_digest": "sha256:64d4258adcaba0b2035191065d9737c03e75410f74ae3fbcbdab35847a8fab78"
+  },
+  {
+    "name": "postgres",
+    "reference": "docker.io/library/postgres:18-alpine",
+    "image_id": "57b23a0326ee442e83b3d3fa027c5a148be0a392d7c91d1ca4e1e70131ee859a",
+    "archive": ".local-containers/trivy-audit-2026-10-30/postgres.tar",
+    "archive_sha256": "84f7ea6c33438604ae09d85bdf97ef5641fbf757fcbb1285a7354c510bf8685e",
+    "manifest_digest": "sha256:3b0ef735388b2cb097fc29b8bb421d86d57d0ddbe7aa1fbd6493e06d65028503"
+  }
+]

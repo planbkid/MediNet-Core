@@ -1,0 +1,84 @@
+# Docker Compose: configuración independiente; todavía no ejecutada con Docker.
+name: medinet-pac-docker-20261030
+services:
+  db:
+    image: docker.io/library/postgres:18-alpine
+    container_name: medinet-pac-docker-20261030-db
+    environment:
+      POSTGRES_DB: pac_local
+      POSTGRES_USER: pac_local_admin
+      POSTGRES_PASSWORD_FILE: /run/secrets/admin_password
+    secrets:
+      - source: admin_password
+        target: admin_password
+    volumes:
+      - pgdata:/var/lib/postgresql
+    networks: [backend]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U pac_local_admin -d pac_local']
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  api:
+    image: medinet-pac:docker-prepared-20261030
+    container_name: medinet-pac-docker-20261030-api
+    environment:
+      POSTGRES_DB: pac_local
+      PAC_DB_USER: pac_local_api
+      DB_HOST: db
+      DB_PORT: "5432"
+    secrets:
+      - source: api_password
+        target: api_password
+    ports: ["127.0.0.1:${PAC_DOCKER_PORT:-18082}:8000"]
+    networks: [frontend, backend]
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  migrate:
+    image: medinet-pac:docker-prepared-20261030
+    profiles: [tools]
+    command: [admin]
+    environment:
+      POSTGRES_DB: pac_local
+      POSTGRES_USER: pac_local_admin
+      PAC_DB_USER: pac_local_api
+      DB_HOST: db
+      DB_PORT: "5432"
+    secrets:
+      - source: admin_password
+        target: admin_password
+      - source: api_password
+        target: api_password
+    networks: [backend]
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+secrets:
+  admin_password:
+    file: ${PAC_DOCKER_SECRETS_DIR:?Configurar ruta absoluta fuera del repositorio}/admin_password
+  api_password:
+    file: ${PAC_DOCKER_SECRETS_DIR:?Configurar ruta absoluta fuera del repositorio}/api_password
+
+volumes:
+  pgdata:
+    name: medinet-pac-docker-20261030-pgdata
+networks:
+  frontend:
+    name: medinet-pac-docker-20261030-frontend
+  backend:
+    name: medinet-pac-docker-20261030-backend
+    internal: true

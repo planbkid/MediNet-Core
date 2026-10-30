@@ -1,0 +1,26 @@
+services:
+  db:
+    image: docker.io/library/postgres:18-alpine
+    container_name: medinet_pac_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Configurar POSTGRES_DB en .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Configurar POSTGRES_USER en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configurar POSTGRES_PASSWORD en .env}
+    ports:
+      - "127.0.0.1:${DB_PORT:?Configurar DB_PORT en .env}:5432"
+    volumes:
+      - pac_db_data:/var/lib/postgresql
+    networks:
+      - pac_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pac_db_data:
+
+networks:
+  pac_net:

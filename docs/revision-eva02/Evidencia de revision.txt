@@ -1,0 +1,45 @@
+EVIDENCIA DE REVISION — 29/10/2026
+
+Alcance: código local MediNet-Core; no evaluación de una cuenta AWS.
+Inventario: inventario-revisado.json (30 archivos de código/SQL/plantilla).
+
+Código actual, copia aislada sin .env:
+  Pruebas aisladas: medinet_pac_audit_20261029, 127.0.0.1:55435
+  119 passed in 5.43s
+
+Diagnóstico adicional sobre el mismo código:
+  Pruebas aisladas: medinet_pac_audit_limits_20261029, 127.0.0.1:55436
+  Página excesiva: HTTP 500 reproducido
+  GET /patients sin credenciales HTTP: 200 reproducido
+  2 passed in 0.17s
+
+Corrección propuesta comprobada únicamente en /tmp:
+  Query(ge=1, le=100000, description="Página: 1 a 100000")
+  Pruebas aisladas: medinet_pac_audit_fixed_20261029, 127.0.0.1:55437
+  123 passed in 5.49s
+  Nuevos casos: páginas 1 y 100000 aceptadas; 100001 y 9223372036854775808 rechazadas.
+
+Los cambios de aislamiento fueron CONTAINER y PORT en tests/pac_test_support.py.
+Base, roles, barreras de identidad y almacenamiento temporal se conservaron.
+Se usó el runner existente y PostgreSQL 18 local sin descargar imagen nueva.
+La copia temporal no contiene .env ni datos de desarrollo.
+
+Otras comprobaciones:
+  python -m pip check: No broken requirements found.
+  compileall app migrations scripts tests: finalizó sin error.
+  git diff --check: finalizó sin error; el código principal no tiene commits,
+  por lo que esa comprobación no valida todos sus archivos sin seguimiento.
+  Consulta directa SELECT 1 OFFSET 184467440737095516140 en la base temporal:
+  ERROR: bigint out of range.
+
+No ejecutado:
+  Docker build; GitHub Actions; Bandit/pip-audit; AWS; conexión de desarrollo.
+Las plantillas se revisaron estáticamente, no se declaran operativas.
+
+Ubicación temporal de la copia: /tmp/medinet-eva02-audit-20261029.
+Se conservaron los tres contenedores de esta revisión para inspección.
+No se borraron contenedores ni volúmenes previos.
+
+Plantillas: YAML parseado; 12 bloques shell validados con bash -n.
+Los 30 archivos originales mantienen las huellas del inventario.
+Estas comprobaciones estáticas no sustituyen docker build o una ejecución CI/CD.

@@ -1,0 +1,60 @@
+name: medinet-eva02
+services:
+  db:
+    image: docker.io/library/postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Completar .env.eva02}
+      POSTGRES_USER: ${POSTGRES_USER:?Completar .env.eva02}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Completar .env.eva02}
+    volumes:
+      - eva02_pgdata:/var/lib/postgresql
+    networks: [backend]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 15
+  api:
+    image: ${PAC_IMAGE:?Completar PAC_IMAGE}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Completar .env.eva02}
+      DB_HOST: db
+      DB_PORT: "5432"
+      PAC_DB_USER: medinet_pac_api
+      PAC_DB_PASSWORD: ${PAC_DB_PASSWORD:?Completar .env.eva02}
+    ports:
+      - "${PAC_BIND:-127.0.0.1}:8001:8000"
+    networks: [frontend, backend]
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  migrate:
+    image: ${PAC_IMAGE:?Completar PAC_IMAGE}
+    profiles: [tools]
+    command: [python, -m, alembic, upgrade, head]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Completar .env.eva02}
+      POSTGRES_USER: ${POSTGRES_USER:?Completar .env.eva02}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Completar .env.eva02}
+      DB_HOST: db
+      DB_PORT: "5432"
+    networks: [backend]
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+volumes:
+  eva02_pgdata:
+networks:
+  frontend:
+  backend:
+    internal: true

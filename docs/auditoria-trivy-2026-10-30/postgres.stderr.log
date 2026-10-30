@@ -1,0 +1,13 @@
+2026-10-30T18:33:31-03:00	INFO	[image] Container image config scanners	scanners=[misconfig secret]
+2026-10-30T18:33:31-03:00	INFO	[vuln] Vulnerability scanning is enabled
+2026-10-30T18:33:31-03:00	INFO	[misconfig] Misconfiguration scanning is enabled
+2026-10-30T18:33:31-03:00	INFO	[checks-client] No downloadable checks were loaded as --skip-check-update is enabled, loading from existing cache...
+2026-10-30T18:33:33-03:00	INFO	[secret] Secret scanning is enabled
+2026-10-30T18:33:33-03:00	INFO	[secret] If your scanning is slow, please try '--scanners vuln' to disable secret scanning
+2026-10-30T18:33:33-03:00	INFO	[secret] Please see https://trivy.dev/docs/v0.76/guide/scanner/secret#recommendation for faster secret detection
+2026-10-30T18:33:34-03:00	INFO	Detected OS	family="alpine" version="3.24.3"
+2026-10-30T18:33:34-03:00	INFO	[alpine] Detecting vulnerabilities...	os_version="3.24" repository="3.24" pkg_num=53
+2026-10-30T18:33:34-03:00	INFO	Number of language-specific files	num=1
+2026-10-30T18:33:34-03:00	INFO	[gobinary] Detecting vulnerabilities...
+2026-10-30T18:33:34-03:00	INFO	Detected config files	num=1
+2026-10-30T18:33:34-03:00	WARN	Using severities from other vendors for some vulnerabilities. Read https://trivy.dev/docs/v0.76/guide/scanner/vulnerability#severity-selection for details.

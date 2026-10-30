@@ -1,0 +1,73 @@
+{
+  "api": {
+    "completed": true,
+    "vulnerabilities": 216,
+    "unique_advisory_ids": 97,
+    "by_severity": {
+      "CRITICAL": 1,
+      "HIGH": 53,
+      "MEDIUM": 90,
+      "LOW": 68,
+      "UNKNOWN": 4
+    },
+    "with_fixed_version": 52,
+    "without_fixed_version": 164,
+    "misconfiguration_failures_by_severity": {
+      "LOW": 1
+    },
+    "secret_findings": 0
+  },
+  "postgres": {
+    "completed": true,
+    "vulnerabilities": 86,
+    "unique_advisory_ids": 86,
+    "by_severity": {
+      "CRITICAL": 2,
+      "HIGH": 26,
+      "MEDIUM": 32,
+      "LOW": 25,
+      "UNKNOWN": 1
+    },
+    "with_fixed_version": 86,
+    "without_fixed_version": 0,
+    "misconfiguration_failures_by_severity": {
+      "HIGH": 1,
+      "LOW": 1
+    },
+    "secret_findings": 0
+  },
+  "project": {
+    "completed": true,
+    "vulnerabilities": 0,
+    "unique_advisory_ids": 0,
+    "by_severity": {
+      "CRITICAL": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0,
+      "UNKNOWN": 0
+    },
+    "with_fixed_version": 0,
+    "without_fixed_version": 0,
+    "misconfiguration_failures_by_severity": {
+      "LOW": 2
+    },
+    "secret_findings": 0
+  },
+  "development": {
+    "completed": true,
+    "vulnerabilities": 0,
+    "unique_advisory_ids": 0,
+    "by_severity": {
+      "CRITICAL": 0,
+      "HIGH": 0,
+      "MEDIUM": 0,
+      "LOW": 0,
+      "UNKNOWN": 0
+    },
+    "with_fixed_version": 0,
+    "without_fixed_version": 0,
+    "misconfiguration_failures_by_severity": {},
+    "secret_findings": 0
+  }
+}

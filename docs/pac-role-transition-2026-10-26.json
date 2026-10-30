@@ -1,0 +1,179 @@
+{
+  "started_at_utc": "2026-10-26T19:46:04.671928+00:00",
+  "container_id": "0134e950a27d287f4ba15b8664b794a10e1b4b8e0d1e2f7caf2c6d7ffa1b3946",
+  "script": "scripts/pac_runtime_role.sql",
+  "script_sha256": "22c9c1bc5490f6491bb31d07443ca04b33d88da5cacf958a2635832e7e95cda2",
+  "before": {
+    "identity": [
+      "medinet_pac",
+      "medinet_pac",
+      "7701012206555426851"
+    ],
+    "custom_roles": [
+      {
+        "rolname": "medinet_pac",
+        "rolcanlogin": true,
+        "rolsuper": true,
+        "rolcreatedb": true,
+        "rolcreaterole": true,
+        "rolreplication": true,
+        "rolbypassrls": true,
+        "rolinherit": true
+      }
+    ],
+    "database": [
+      {
+        "datname": "medinet_pac",
+        "owner": "medinet_pac",
+        "datacl": null
+      }
+    ],
+    "schema": [
+      {
+        "nspname": "public",
+        "owner": "pg_database_owner",
+        "nspacl": "{pg_database_owner=UC/pg_database_owner,=U/pg_database_owner}"
+      }
+    ],
+    "objects": [
+      {
+        "relname": "alembic_version",
+        "owner": "medinet_pac",
+        "relacl": null
+      },
+      {
+        "relname": "patients",
+        "owner": "medinet_pac",
+        "relacl": null
+      },
+      {
+        "relname": "patients_id_seq",
+        "owner": "medinet_pac",
+        "relacl": null
+      }
+    ],
+    "memberships": [
+      {
+        "granted_role": "pg_read_all_settings",
+        "member": "pg_monitor",
+        "admin_option": false,
+        "inherit_option": true,
+        "set_option": true
+      },
+      {
+        "granted_role": "pg_read_all_stats",
+        "member": "pg_monitor",
+        "admin_option": false,
+        "inherit_option": true,
+        "set_option": true
+      },
+      {
+        "granted_role": "pg_stat_scan_tables",
+        "member": "pg_monitor",
+        "admin_option": false,
+        "inherit_option": true,
+        "set_option": true
+      }
+    ],
+    "alembic": "0002"
+  },
+  "status": "committed",
+  "password_step": "pending_manual_hidden_input",
+  "psql_exit_code": 0,
+  "psql_status_lines": [
+    "BEGIN",
+    "DO",
+    "CREATE ROLE",
+    "REVOKE",
+    "GRANT",
+    "GRANT",
+    "GRANT",
+    "GRANT",
+    "COMMIT"
+  ],
+  "after": {
+    "identity": [
+      "medinet_pac",
+      "medinet_pac",
+      "7701012206555426851"
+    ],
+    "custom_roles": [
+      {
+        "rolname": "medinet_pac",
+        "rolcanlogin": true,
+        "rolsuper": true,
+        "rolcreatedb": true,
+        "rolcreaterole": true,
+        "rolreplication": true,
+        "rolbypassrls": true,
+        "rolinherit": true
+      },
+      {
+        "rolname": "medinet_pac_api",
+        "rolcanlogin": true,
+        "rolsuper": false,
+        "rolcreatedb": false,
+        "rolcreaterole": false,
+        "rolreplication": false,
+        "rolbypassrls": false,
+        "rolinherit": false
+      }
+    ],
+    "database": [
+      {
+        "datname": "medinet_pac",
+        "owner": "medinet_pac",
+        "datacl": "{=c/medinet_pac,medinet_pac=CTc/medinet_pac,medinet_pac_api=c/medinet_pac}"
+      }
+    ],
+    "schema": [
+      {
+        "nspname": "public",
+        "owner": "pg_database_owner",
+        "nspacl": "{pg_database_owner=UC/pg_database_owner,=U/pg_database_owner,medinet_pac_api=U/pg_database_owner}"
+      }
+    ],
+    "objects": [
+      {
+        "relname": "alembic_version",
+        "owner": "medinet_pac",
+        "relacl": null
+      },
+      {
+        "relname": "patients",
+        "owner": "medinet_pac",
+        "relacl": "{medinet_pac=arwdDxtm/medinet_pac,medinet_pac_api=arw/medinet_pac}"
+      },
+      {
+        "relname": "patients_id_seq",
+        "owner": "medinet_pac",
+        "relacl": "{medinet_pac=rwU/medinet_pac,medinet_pac_api=U/medinet_pac}"
+      }
+    ],
+    "memberships": [
+      {
+        "granted_role": "pg_read_all_settings",
+        "member": "pg_monitor",
+        "admin_option": false,
+        "inherit_option": true,
+        "set_option": true
+      },
+      {
+        "granted_role": "pg_read_all_stats",
+        "member": "pg_monitor",
+        "admin_option": false,
+        "inherit_option": true,
+        "set_option": true
+      },
+      {
+        "granted_role": "pg_stat_scan_tables",
+        "member": "pg_monitor",
+        "admin_option": false,
+        "inherit_option": true,
+        "set_option": true
+      }
+    ],
+    "alembic": "0002"
+  },
+  "completed_at_utc": "2026-10-26T19:46:04.732080+00:00"
+}

@@ -1,0 +1,35 @@
+TRASLADO DE MEDINET-CORE — 30 de octubre de 2026
+
+1. Extraer el ZIP. Abrir una terminal en la carpeta MediNet-Core.
+2. Leer README.md y docs/TRASPASO-PROYECTO-2026-10-30.md para conocer
+   el estado, las verificaciones previas y los pendientes del proyecto.
+3. Para preparar una instalación NUEVA con Podman (Linux/macOS; en Windows,
+   usar un entorno Linux mediante WSL2 con Podman correctamente configurado):
+   Instalar Python 3.14 y Podman; el motor debe estar en funcionamiento.
+   Se requiere conexión a Internet para descargar dependencias e imágenes.
+
+   python3 -m venv .venv
+   .venv/bin/python -m pip install -r requirements.txt
+   .venv/bin/python scripts/init_local_containers.py
+   podman build -f Dockerfile.local -t localhost/medinet-pac:local-20261030 .
+   .venv/bin/podman-compose --env-file .env.containers -f compose.local.yml up -d db
+   .venv/bin/podman-compose --env-file .env.containers -f compose.local.yml --profile tools run --rm migrate
+   .venv/bin/podman-compose --env-file .env.containers -f compose.local.yml up -d api
+
+   Abrir http://127.0.0.1:18081/docs
+   Detalles y comprobaciones: docs/contenedores-locales.md.
+   Ejecutar el inicializador solo en la primera preparación.
+
+CONTENIDO
+Código actual, migraciones, pruebas, scripts, documentación, informes,
+configuración de contenedores y plantillas .env.example.
+
+EXCLUSIONES
+No incluye contraseñas (.env y variantes reales), llaves privadas, .git,
+.venv, cachés, .local-containers, imágenes, secretos ni volúmenes de Podman.
+No incluye respaldo de PostgreSQL: la instalación nueva comienza con una
+base vacía. Los datos existentes siguen conservados en el computador original.
+Para trasladar esos datos se requiere un respaldo/restauración por separado.
+No se ha ejecutado la instalación en el computador de destino.
+Docker Compose está preparado, pero su ejecución sigue pendiente según las
+notas del proyecto; la receta anterior corresponde al entorno Podman documentado.

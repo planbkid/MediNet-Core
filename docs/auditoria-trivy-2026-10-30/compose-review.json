@@ -1,0 +1,36 @@
+[
+  {
+    "file": "compose.local.yml",
+    "kind": "supplemental static review; not Trivy Compose coverage",
+    "checks": {
+      "db_no_published_port": true,
+      "api_localhost_only": true,
+      "api_no_admin_environment": true,
+      "api_one_secret": true,
+      "migrations_separate_profile": true,
+      "backend_internal": true,
+      "api_read_only": true,
+      "api_cap_drop_all": true,
+      "api_no_new_privileges": true,
+      "db_healthcheck_present": true,
+      "api_healthcheck_present": true
+    }
+  },
+  {
+    "file": "compose.docker.yml",
+    "kind": "supplemental static review; not Trivy Compose coverage",
+    "checks": {
+      "db_no_published_port": true,
+      "api_localhost_only": true,
+      "api_no_admin_environment": true,
+      "api_one_secret": true,
+      "migrations_separate_profile": true,
+      "backend_internal": true,
+      "api_read_only": true,
+      "api_cap_drop_all": true,
+      "api_no_new_privileges": true,
+      "db_healthcheck_present": true,
+      "api_healthcheck_present": true
+    }
+  }
+]

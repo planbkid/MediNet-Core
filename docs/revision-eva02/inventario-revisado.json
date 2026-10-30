@@ -1,0 +1,122 @@
+[
+  {
+    "archivo": "app/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "archivo": "app/admin_database.py",
+    "sha256": "34ad53951765b83ca6012ffb34ce5703641f655017f7a5dd982973f446b4d53d"
+  },
+  {
+    "archivo": "app/crear_tablas.py",
+    "sha256": "68a442a1558f6d7446d2ad06c3a108788f322d24862102e92611ada5ec792e4e"
+  },
+  {
+    "archivo": "app/database.py",
+    "sha256": "97e95244f44bd7f7d4fbd2f62522a2e6d36b763ec7fde2081f8fa7ae075bc3c2"
+  },
+  {
+    "archivo": "app/db_base.py",
+    "sha256": "15328eb3325337c629bb7caccf68076a0f6b96758d606ef1f83ae4cdcd3f6779"
+  },
+  {
+    "archivo": "app/main.py",
+    "sha256": "c8c84e48d0b511b79eb3149c47fb95954537af12a8b59d0cc5ab73ab53859457"
+  },
+  {
+    "archivo": "app/models.py",
+    "sha256": "93cce5b55aec0fc5b34681098f9a1d9f63fac6c44c1b8bc5b140be8876fb2016"
+  },
+  {
+    "archivo": "app/routers/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "archivo": "app/routers/patients.py",
+    "sha256": "ebb0568af48bf241c010108a72b84192310b51af82280acb35ecd26c71392c04"
+  },
+  {
+    "archivo": "app/run_local.py",
+    "sha256": "5a41246e3490b31ab324decf87b89a18f517187ee586ecef733d6150433b013c"
+  },
+  {
+    "archivo": "app/schemas.py",
+    "sha256": "b47c82b1871dbef04994628b049aaba2dee12ba9d47cfa87f2f40f02bb56074a"
+  },
+  {
+    "archivo": "app/services/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "archivo": "app/services/patients.py",
+    "sha256": "baef26e091ddc715b1c2a965b39e1f5ba09e62a0c98e6cec11b2010af04619a7"
+  },
+  {
+    "archivo": "app/validators/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "archivo": "app/validators/run.py",
+    "sha256": "0389f95ce64745e7d0b34afe50d09bcb3a56c71774fbbc49aa9cf2153d4022f4"
+  },
+  {
+    "archivo": "migrations/env.py",
+    "sha256": "97a1df3b32ae10799d0255ca1956a2c61dd38b49eb4c2d48d5d0d83f564f1b73"
+  },
+  {
+    "archivo": "migrations/script.py.mako",
+    "sha256": "037c526a0a40c7460495dd3e8aafe71e4f52164e8985f8598a49733cbb6ca2c1"
+  },
+  {
+    "archivo": "migrations/versions/0001_existing_patients.py",
+    "sha256": "2a14282002686e6df909d7ae55c8a726eecf6c2160004d898699a441d1274db2"
+  },
+  {
+    "archivo": "migrations/versions/0002_prefix_indexes.py",
+    "sha256": "becb70141ef670ea44acd3c76a462ea3d46943756886c5470c1872dc4681889a"
+  },
+  {
+    "archivo": "scripts/check_runtime_permissions.sql",
+    "sha256": "6ecc951c1a0ef7ab2cb19b694be40cc058d4a72e7bf9fd9fa45103b8aadc53e7"
+  },
+  {
+    "archivo": "scripts/pac_runtime_role.sql",
+    "sha256": "22c9c1bc5490f6491bb31d07443ca04b33d88da5cacf958a2635832e7e95cda2"
+  },
+  {
+    "archivo": "scripts/run_pac_tests.py",
+    "sha256": "f281b4c313b32e1d6fd578d88b60b45c7155e6c35c2604f9663b1e5825dce194"
+  },
+  {
+    "archivo": "tests/__init__.py",
+    "sha256": "6548725d9c893c1e60ec55d6d4ee7b5e9da0cfeda57cd2db15860f1aead9b552"
+  },
+  {
+    "archivo": "tests/conftest.py",
+    "sha256": "0e2284e9b2c3aaed19e73decb5822c78551e5a90e391399c40060a8a9d430b1b"
+  },
+  {
+    "archivo": "tests/pac_test_support.py",
+    "sha256": "d76bce270bf4481660063c43d500bfe583d9d22b2cf3dfbb8e1ea0f789bae2d2"
+  },
+  {
+    "archivo": "tests/test_database_privileges.py",
+    "sha256": "4798fe27ae029601ab8a8f598136e80aa69fb25b7c5ef0cd1fc8574089209abf"
+  },
+  {
+    "archivo": "tests/test_errors_without_db.py",
+    "sha256": "0487a8acfa4f5fed96adbb87703201f160b45a537ac31d895fcd9c6c0f278f4c"
+  },
+  {
+    "archivo": "tests/test_local_launcher.py",
+    "sha256": "f9dfc741d735ff77b2429044fb1445c35da28d1d6d14232c1b1fca693adfeef5"
+  },
+  {
+    "archivo": "tests/test_migrations.py",
+    "sha256": "8476af62fe91757ca8d84f936a4ea76c2e67a0c049774e565ad6030effe69079"
+  },
+  {
+    "archivo": "tests/test_patients.py",
+    "sha256": "19ce1e5e0d6535fc9e04a17fe7a9ca782735c003e3fa631a4e5b61749362e968"
+  }
+]

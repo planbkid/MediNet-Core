@@ -1,0 +1,105 @@
+name: EVA02
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Preparar Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+          podman pull docker.io/library/postgres:18-alpine
+      - name: Instalar dependencias
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements-dev.txt
+          .venv/bin/python -m pip install bandit pip-audit
+      - name: Pruebas aisladas
+        run: .venv/bin/python scripts/run_pac_tests.py
+      - name: SAST
+        run: .venv/bin/python -m bandit -r app migrations scripts
+      - name: SCA
+        run: .venv/bin/python -m pip_audit -r requirements.txt
+  build:
+    needs: test-security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Nombre y etiqueta de imagen
+        id: image
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: echo "name=ghcr.io/${REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - name: Construir
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}
+        run: docker build -t "$IMAGE" .
+      - name: Publicar en GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_USER: ${{ github.actor }}
+          IMAGE: ${{ steps.image.outputs.name }}
+        run: |
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GH_USER" --password-stdin
+          docker push "$IMAGE"
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: [self-hosted, linux, medinet-deploy]
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configurar SSH
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+        run: |
+          PAC_SSH_DIR=$(mktemp -d "$RUNNER_TEMP/medinet-ssh.XXXXXX")
+          echo "PAC_SSH_DIR=$PAC_SSH_DIR" >> "$GITHUB_ENV"
+          printf '%s\n' "$EC2_SSH_KEY" > "$PAC_SSH_DIR/key"
+          chmod 600 "$PAC_SSH_DIR/key"
+          printf '%s\n' "$EC2_KNOWN_HOSTS" > "$PAC_SSH_DIR/known_hosts"
+          chmod 600 "$PAC_SSH_DIR/known_hosts"
+      - name: Copiar manifiesto
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          scp -i "$PAC_SSH_DIR/key" -o UserKnownHostsFile="$PAC_SSH_DIR/known_hosts" -o BatchMode=yes -o StrictHostKeyChecking=yes compose.eva02.yml "${EC2_USER}@${EC2_HOST}:MediNet-Core-EVA02/compose.eva02.yml"
+      - name: Desplegar etiqueta verificada
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          IMAGE: ${{ needs.build.outputs.image }}
+        run: |
+          ssh -i "$PAC_SSH_DIR/key" -o UserKnownHostsFile="$PAC_SSH_DIR/known_hosts" -o BatchMode=yes -o StrictHostKeyChecking=yes "${EC2_USER}@${EC2_HOST}" bash -s -- "$IMAGE" <<'REMOTE'
+          set -euo pipefail
+          cd "$HOME/MediNet-Core-EVA02"
+          export PAC_IMAGE="$1"
+          docker compose --env-file .env.eva02 -f compose.eva02.yml pull api migrate
+          docker compose --env-file .env.eva02 -f compose.eva02.yml up -d db
+          docker compose --env-file .env.eva02 -f compose.eva02.yml run --rm migrate
+          docker compose --env-file .env.eva02 -f compose.eva02.yml up -d api
+          docker compose --env-file .env.eva02 -f compose.eva02.yml exec -T api python -c 'import urllib.request; r=urllib.request.urlopen("http://127.0.0.1:8000/patients?page_size=1", timeout=10); assert r.status == 200'
+          REMOTE
+      - name: Retirar la clave temporal del runner
+        if: always()
+        run: |
+          if [ -n "${PAC_SSH_DIR:-}" ] && [ -d "$PAC_SSH_DIR" ]; then
+            rm -f -- "$PAC_SSH_DIR/key" "$PAC_SSH_DIR/known_hosts"
+            rmdir -- "$PAC_SSH_DIR"
+          fi

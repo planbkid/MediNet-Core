@@ -1,0 +1,5 @@
+{
+  "path": "scripts/run_trivy_scans.py",
+  "sha256": "bfd778d21a4d091a8658e67c6b8350f795cfb24eb5b0bb7165d597b225d612cf",
+  "input_verification_completed": true
+}

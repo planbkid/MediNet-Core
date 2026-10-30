@@ -1,0 +1,430 @@
+REVISION Y RECETA DE CORRECCIONES — EVA02 / MEDINET-CORE PAC
+Fecha: 29 de octubre de 2026
+
+1. RESULTADO DE LA REVISION
+
+El sistema TODAVIA NO acredita toda la evaluación hasta el despliegue.
+El backend está implementado y sus 119 pruebas pasaron en esta revisión.
+Faltan entregables de contenedorización, CI/CD, evidencia AWS e informe formal.
+Hay además un error de paginación reproducido: devuelve 500 en vez de 422.
+No calculo una nota: la pauta no asigna pesos individuales a sus cinco criterios.
+
+Pauta usada: /home/leecho/Descargas/EVA02.docx, Desarrollo Seguro CI3064.
+EVA02 (1).docx tiene el mismo texto extraído.
+Especificación adicional: Modulos aplicación, EVA 02, EVA 03, EVA 04.docx.
+NO usé EVA2.pdf ni Informe_Evaluacion_2 jhoseph.docx: corresponden a otra actividad.
+
+Contra la rúbrica:
+- Backend y Swagger: funcionalidad principal verificada; corregir paginación.
+- Docker seguro: incompleto. Solo hay Compose de PostgreSQL; falta backend.
+- AWS: no acreditado. No se verificó una instancia, URL o Security Group.
+- Pipeline: ausente en el repositorio. La pauta también exige despliegue continuo.
+- Informe ISO 27034/OWASP: no encontré el informe formal de este sistema.
+  README y paso3-validacion.md son documentación de desarrollo, no ese informe.
+
+Importante: la especificación general describe frontend, pero EVA02 pide backend,
+BD, Swagger, Docker, AWS, CI/CD e informe. No califico la ausencia de frontend
+como incumplimiento automático de esta evaluación. Tampoco exige DELETE para PAC
+ni tablas de otros módulos. No agregues esas funciones sin un requisito real.
+
+2. QUE REVISE Y QUE COMPROBE
+
+Leí los 30 archivos de app/, migrations/, scripts/ y tests/, además de las
+configuraciones y documentación. El inventario con huellas está en
+inventario-revisado.json, en esta misma carpeta.
+
+Comprobaciones ejecutadas:
+- pip check: sin incompatibilidades de dependencias instaladas.
+- Compilación de Python: sin errores de sintaxis.
+- Suite actual: 119 passed in 5.43s.
+- Reproducción adicional: page excesiva -> HTTP 500; GET /patients sin credenciales
+  HTTP -> 200. Ambos casos se comprobaron en una base temporal.
+- Corrección de page, SOLO EN UNA COPIA: 123 passed in 5.49s.
+  Incluye las 119 pruebas y cuatro comprobaciones de límites.
+
+Conservé las bases temporales medinet_pac_audit_20261029 (55435),
+medinet_pac_audit_limits_20261029 (55436) y medinet_pac_audit_fixed_20261029
+(55437). No modifiqué la base de desarrollo ni sus permisos o credenciales.
+La copia de pruebas cambió únicamente nombre/puerto del contenedor; luego se
+agregaron las pruebas de diagnóstico y el límite propuesto para comprobarlo.
+
+No construí Docker, no ejecuté SAST/SCA ni GitHub Actions y no desplegué en AWS.
+No declaro dependencias libres de vulnerabilidades. No leí ni publiqué .env.
+Los contenedores locales consultados estaban detenidos: eso no permite
+inferir si existe o no otra instalación en AWS.
+
+3. COMO USAR ESTA RECETA
+
+Terminal = ventana donde escribes comandos. Editor = programa para editar archivos.
+Ejecuta cada bloque por separado y compara el resultado antes de seguir.
+No copies los rótulos COMANDO, CAMBIO o RESULTADO en la terminal.
+Un bloque que termina con barra invertida continúa en la línea siguiente.
+
+Esta revisión crea documentos y plantillas dentro de docs/revision-eva02/.
+NO aplica las correcciones al código principal. Las plantillas Docker/CI/CD son
+propuestas revisadas como texto; aún necesitan construcción y ejecución reales.
+
+ORDEN: corregir código -> probar -> contenedores locales -> AWS -> pipeline
+con despliegue -> informe y evidencias. No marques una etapa pendiente como hecha.
+Si compartes el ZIP de esta revisión, descomprímelo en la raíz del proyecto:
+contiene docs/revision-eva02/ con el documento y sus plantillas; no contraseñas.
+
+CORRECCION 1 — EVITAR EL ERROR DE PAGINACION
+
+Problema: app/routers/patients.py:50 solo exige page >= 1.
+app/services/patients.py:77 calcula OFFSET = (page - 1) * page_size.
+page=9223372036854775808 produce un valor que PostgreSQL no puede usar como
+OFFSET; la API devolvió 500. OFFSET es cuántas filas se saltan al paginar.
+
+Dónde: en tu editor, abre app/routers/patients.py.
+Busca esta línea:
+
+    page: Annotated[int, Query(ge=1, description="Página, comenzando en 1")] = 1,
+
+CAMBIO: reemplázala por esta única línea:
+
+    page: Annotated[int, Query(ge=1, le=100000, description="Página: 1 a 100000")] = 1,
+
+Por qué: le fija un máximo. 100000 es una política propuesta, no un número de
+la rúbrica. Con page_size máximo 100 mantiene OFFSET dentro de un rango válido.
+No garantiza consultas rápidas con grandes volúmenes; eso requiere otra medición.
+
+CAMBIO EN PRUEBAS: abre tests/test_patients.py. En la lista de casos de
+la función test_bad_filters, agrega estos dos diccionarios:
+
+    {'page': 100001},
+    {'page': 9223372036854775808},
+
+COMANDO 1.1 — Ejecutar desde la raíz de MediNet-Core:
+
+    .venv/bin/python scripts/run_pac_tests.py
+
+RESULTADO: todas las pruebas deben pasar. Si el contenedor de pruebas original
+ya existe, el runner abortará; identifica ese contenedor antes de retirarlo según
+README. No borres medinet_pac_db ni volúmenes. El runner necesita Podman operativo
+y la imagen postgres:18-alpine disponible. No uses pytest contra desarrollo.
+
+COMANDO 1.2 — Con tu API local encendida en 8001:
+
+    curl -i 'http://127.0.0.1:8001/patients?page=9223372036854775808'
+
+RESULTADO: HTTP 422, que significa entrada rechazada, no 500.
+Esta modificación fue comprobada en la copia temporal, no aplicada a tu app.
+
+CORRECCION 2 — DIFERENCIAR SEGURIDAD DE BD Y SEGURIDAD HTTP
+
+Hallazgo: las rutas no exigen autenticación HTTP. Lo confirmé con GET /patients
+sin credenciales: devuelve 200. El rol medinet_pac_api protege permisos de la
+base, pero no identifica a la persona que llama a la API.
+
+La pauta EVA02 no enumera login como función propia de PAC. Aun así, antes de
+usar pacientes reales o publicar acceso general, integra el mecanismo acordado
+con IAM: identificación del usuario y autorización de lectura/escritura.
+No inventes un JWT, una URL de IAM o nombres de roles que el equipo no haya dado.
+
+CAMBIO PENDIENTE: acordar ese contrato y proteger las rutas de pacientes.
+COMPROBACION: sin identidad, 401; con identidad sin permiso, 403; con permiso,
+200/201 según la operación. Esos resultados son objetivos, no pruebas ya pasadas.
+
+La especificación de AUD también obliga a los otros módulos a enviar eventos
+críticos de forma asíncrona. No encontré esa integración. Acordar URL, formato,
+autenticación y reintentos con AUD antes de implementarla. No hay un comando
+exacto honesto para integrar un servicio cuyo contrato aún no está disponible.
+
+CORRECCION 3 — PREPARAR DOCKER SIN TOCAR TU BASE DEL PASO 2
+
+Falta: Dockerfile y .dockerignore. docker-compose.yml:1-26 solo tiene db;
+la red pac_net no está declarada internal: true. El puerto de BD está limitado
+al equipo local: eso está bien, pero no equivale a completar la orquestación.
+
+Una imagen es el paquete ejecutable del programa. Multi-stage separa la etapa
+de instalación de la de ejecución. USER 10001 evita ejecutar el backend como root.
+
+Las plantillas están en docs/revision-eva02/plantillas/. Usan el proyecto NUEVO
+medinet-eva02 y su volumen eva02_pgdata para no alterar los datos del paso 2.
+No trasladan automáticamente pacientes entre Docker y Podman.
+Necesitas Docker Engine y el complemento Docker Compose instalados.
+
+COMANDO 3.1 — Comprobar herramientas:
+
+    docker --version
+    docker compose version
+
+RESULTADO: ambos muestran versión. Si fallan, primero instala las herramientas
+según tu sistema; no asumo si usas Fedora, Ubuntu u otro Linux.
+
+COMANDO 3.2 — Copiar la receta de imagen:
+
+    cp -n docs/revision-eva02/plantillas/Dockerfile Dockerfile
+
+COMANDO 3.3 — Copiar exclusiones de la imagen:
+
+    cp -n docs/revision-eva02/plantillas/.dockerignore .dockerignore
+
+COMANDO 3.4 — Copiar la orquestación nueva:
+
+    cp -n docs/revision-eva02/plantillas/compose.eva02.yml compose.eva02.yml
+
+COMANDO 3.5 — Copiar la configuración privada nueva:
+
+    cp -n docs/revision-eva02/plantillas/.env.eva02.example .env.eva02
+
+-n significa no reemplazar archivos existentes. Si ya tenías alguno, compáralo
+con la plantilla; no supongas que la copia lo actualizó.
+
+CAMBIO: abre .gitignore y agrega estas líneas; guarda el archivo:
+
+    .env.eva02
+    *.pem
+    *.key
+    respaldos_locales/
+
+CAMBIO: abre .env.eva02. Sustituye los DOS marcadores de contraseña por secretos
+propios y diferentes. POSTGRES_PASSWORD es del administrador; PAC_DB_PASSWORD
+es de medinet_pac_api. Conserva PAC_BIND=127.0.0.1 para esta prueba local.
+No reemplaces ni compartas tu .env del paso 2.
+
+COMANDO 3.6 — Generar una contraseña; repite para la otra:
+
+    .venv/bin/python -c 'import secrets; print(secrets.token_urlsafe(32))'
+
+COMANDO 3.7 — Limitar lectura del archivo privado:
+
+    chmod 600 .env.eva02
+
+COMANDO 3.8 — Validar YAML sin imprimir contraseñas:
+
+    docker compose --env-file .env.eva02 -f compose.eva02.yml config --quiet
+
+COMANDO 3.9 — Construir la imagen propuesta:
+
+    docker build -t medinet-pac:eva02 .
+
+RESULTADO: construcción exitosa. Si falla una librería o una descarga, corrige
+ese error antes de seguir. La compatibilidad con Alpine NO fue ejecutada aquí.
+
+COMANDO 3.10 — Comprobar el usuario de ejecución:
+
+    docker run --rm --entrypoint id medinet-pac:eva02 -u
+
+RESULTADO: 10001, no 0. El comando prueba el backend, no cambia usuarios de BD.
+
+CORRECCION 4 — ENCENDER Y PREPARAR LA BASE NUEVA DE CONTENEDORES
+
+La API se conecta a db:5432 dentro de Compose. No a 127.0.0.1:5433: dentro de
+un contenedor, 127.0.0.1 identifica a ese mismo contenedor.
+El servicio migrate usa administrador; api recibe solo credenciales limitadas.
+
+COMANDO 4.1 — Encender únicamente PostgreSQL de la prueba nueva:
+
+    docker compose --env-file .env.eva02 -f compose.eva02.yml up -d db
+
+COMANDO 4.2 — Aplicar el esquema:
+
+    docker compose --env-file .env.eva02 -f compose.eva02.yml run --rm migrate
+
+RESULTADO: migraciones 0001/0002 aplicadas. La plantilla no publica PostgreSQL
+al host; el acceso de administración se hace mediante docker compose exec.
+
+COMANDO 4.3 — SOLO en esa base nueva, crear el rol limitado una vez:
+
+    docker compose --env-file .env.eva02 -f compose.eva02.yml exec -T db \
+      psql -U medinet_pac -d medinet_pac -v ON_ERROR_STOP=1 \
+      < scripts/pac_runtime_role.sql
+
+RESULTADO: COMMIT. Si el rol ya existe, no repitas este script.
+
+COMANDO 4.4 — Abrir el cliente de PostgreSQL:
+
+    docker compose --env-file .env.eva02 -f compose.eva02.yml exec db \
+      psql -U medinet_pac -d medinet_pac
+
+DENTRO DE PSQL, escribe estas órdenes por separado:
+
+    \password medinet_pac_api
+    \q
+
+En el prompt oculto, usa EXACTAMENTE la contraseña PAC_DB_PASSWORD que pusiste
+en .env.eva02. No escribas esa contraseña como orden SQL o argumento del sistema.
+
+COMANDO 4.5 — Encender el backend:
+
+    docker compose --env-file .env.eva02 -f compose.eva02.yml up -d api
+
+COMANDO 4.6 — Ver estado:
+
+    docker compose --env-file .env.eva02 -f compose.eva02.yml ps
+
+COMANDO 4.7 — Verificar que HTTP también puede consultar BD:
+
+    curl --fail 'http://127.0.0.1:8001/patients?page_size=1'
+
+RESULTADO: 200 con items y paginación. /health solo no comprueba la base.
+Si 8001 está ocupado, detén únicamente tu API local anterior con Ctrl+C o cambia
+el puerto publicado en la plantilla y adapta esta URL. No detengas servicios ajenos.
+Completa además POST/GET/PATCH con el paciente sintético de la guía Paso 3.
+
+CORRECCION 5 — REGISTRAR EL PROYECTO EN GIT
+
+Hallazgo: main todavía no tiene commits ni remoto configurado. Así no puede
+existir un pipeline del repositorio que se dispare ante un push.
+Git guarda versiones; GitHub aloja la copia remota y ejecuta Actions.
+
+COMANDO 5.1 — Comprobar qué NO debe subirse:
+
+    git check-ignore .env .env.eva02 .venv
+
+RESULTADO: esos tres nombres aparecen como ignorados.
+
+COMANDO 5.2 — Revisar archivos pendientes:
+
+    git status --short
+
+No uses git add . sin revisar. Todavía falta incorporar la plantilla de pipeline
+del paso 7. No agregues respaldos, contraseñas, llaves ni copias antiguas del código.
+El alta del remoto y el push necesitan la URL real del repositorio del grupo;
+no la invento ni ejecuto una publicación durante esta revisión.
+
+CORRECCION 6 — PRIMER DESPLIEGUE Y EVIDENCIA EN AWS
+
+Estado: no acreditado. El repositorio local no demuestra que exista un despliegue.
+Antes de crear recursos, confirma cuenta, región, presupuesto, sistema de EC2,
+usuario SSH y dirección de la instancia. No hay valores verificados para esos
+campos; por eso no incluyo órdenes AWS con identificadores inventados.
+
+EC2 es el servidor de AWS. Security Group es el filtro de tráfico que controla
+qué conexiones pueden llegar a él. Crear una instancia puede generar cobros.
+
+EN LA CONSOLA DE AWS, en este orden:
+1. Selecciona la instancia del grupo o crea la acordada con el docente.
+2. Instala Docker y Compose siguiendo la guía de SU sistema operativo.
+3. En Security Group, permite 22 solo desde administración y el runner autorizado.
+4. Para una demostración restringida, permite 8001 solo desde las IP del grupo
+   y evaluador. No abras 5432 ni 5433 a Internet. Un /32 representa una IP IPv4.
+5. Para servicio real, usa HTTPS y la autorización acordada; no publiques datos
+   reales con la API actual sin autenticación. HTTPS no figura como requisito
+   explícito en esta pauta, pero es una medida previa al uso real.
+
+DENTRO DE EC2, tras conectarte con el usuario real de esa instancia:
+
+COMANDO 6.1 — Crear una carpeta nueva:
+
+    mkdir -p ~/MediNet-Core-EVA02
+
+Copia allí el código necesario o una revisión Git acordada y las plantillas
+Docker/Compose. No copies .env de tu computador ni bases con pacientes reales.
+Crea .env.eva02 con secretos nuevos y permisos 600, como en el paso 3.
+Para demostrar acceso externo restringido, usa PAC_BIND=0.0.0.0 en ese archivo.
+Esa dirección significa escuchar en las interfaces de EC2; Security Group limita
+quién puede llegar. Mantener 127.0.0.1 solo permitiría acceso local o por túnel.
+
+Ejecuta los pasos 3.8 a 4.7 DENTRO DE EC2 para la primera instalación.
+Abre /docs desde un equipo autorizado usando la dirección real de EC2 y 8001.
+Guarda evidencia de POST/GET/PATCH, reinicio y persistencia, sin información real.
+Una imagen creada en tu PC no aparece automáticamente en EC2: constrúyela allí
+en el primer arranque o descárgala del registro después de publicarla.
+
+RESULTADO: backend y BD operativos en EC2, acceso permitido solo a los orígenes
+acordados y prueba real desde fuera de la instancia. No marques AWS como logrado
+solo porque una terminal local muestra contenedores encendidos.
+
+CORRECCION 7 — AGREGAR Y PROBAR CI/CD
+
+CI = construir, probar y analizar cada cambio. CD = desplegar la imagen aprobada.
+Runner = equipo que ejecuta las tareas de GitHub; GHCR = registro de imágenes.
+Tag = etiqueta que identifica la versión de una imagen.
+La pauta exige los cuatro: Build, Test, Security Scan y despliegue de imagen con tag.
+
+COMANDO 7.1 — Crear la carpeta de GitHub Actions:
+
+    mkdir -p .github/workflows
+
+COMANDO 7.2 — Copiar la plantilla propuesta:
+
+    cp -n docs/revision-eva02/plantillas/ci-cd.yml .github/workflows/ci-cd.yml
+
+La plantilla instala Python 3.14, prepara Podman, ejecuta la suite aislada,
+Bandit (análisis del código), pip-audit (vulnerabilidades conocidas en dependencias),
+construye la imagen y publica en GHCR. El tag es el identificador del commit.
+Solo un push a main intenta publicar/desplegar. Las otras ramas se verifican.
+
+ANTES DEL PRIMER PUSH, configura en GitHub:
+1. Settings > Environments > production.
+2. Allí crea estos secrets: EC2_HOST, EC2_USER, EC2_SSH_KEY, EC2_KNOWN_HOSTS.
+   Host/usuario son los reales. La key debe autorizar ese usuario en EC2.
+   KNOWN_HOSTS contiene la clave pública del servidor verificada por un canal
+   confiable. No desactives la comprobación SSH para resolver un fallo.
+3. Registra en un equipo Linux del grupo un runner propio con etiqueta
+   medinet-deploy; necesita git, bash, ssh y scp. Usa salida fija o VPN autorizada
+   por Security Group. No abras 22 al mundo para dar paso a GitHub-hosted.
+4. En EC2 debe existir ~/MediNet-Core-EVA02/.env.eva02 y la base/rol del paso 6.
+   El usuario remoto necesita permisos para ejecutar Docker.
+5. EC2 debe poder descargar GHCR: paquete público o login local con permiso de
+   lectura. La visibilidad del paquete se configura después de su primera publicación.
+
+COMANDO 7.3 — Preparar SOLO los archivos revisados:
+
+    git add app migrations scripts tests requirements.txt requirements-dev.txt \
+      pytest.ini alembic.ini docker-compose.yml .gitignore .env.example README.md \
+      Dockerfile .dockerignore compose.eva02.yml .github/workflows/ci-cd.yml
+
+COMANDO 7.4 — Ver el contenido preparado:
+
+    git diff --cached --stat
+
+Si está correcto, registra un commit, configura el remoto real y haz push según
+el flujo del grupo. No doy una URL ficticia ni publico desde esta revisión.
+
+RESULTADO: en Actions, pruebas, escáneres, build y deploy terminan correctamente.
+El deploy comprueba /patients dentro del contenedor; verifica además la URL EC2
+desde un equipo autorizado. Si un escáner falla, revisa el hallazgo: no lo ignores
+ni uses continue-on-error para aparentar cumplimiento.
+Plantilla aún no ejecutada: un YAML correcto no equivale a un pipeline aprobado.
+
+CORRECCION 8 — INFORME TECNICO Y EVIDENCIAS DE ENTREGA
+
+La rúbrica exige un documento formal. Incluye únicamente hechos comprobados:
+1. Dibujo de arquitectura: cliente -> API -> PostgreSQL; separación de redes.
+2. Modelo patients: 12 columnas, PK, RUN UNIQUE, CHECK e índices. No inventes FK
+   si PAC no relaciona todavía otras tablas; la pauta dice “donde aplique”.
+3. Ciclo seguro: requisito -> riesgo -> control implementado -> prueba -> evidencia.
+4. ISO 27034: explica cómo organizaste controles de seguridad en ese ciclo;
+   no afirmes certificación ni cumplimiento total por usar un framework.
+5. OWASP: relaciona SQLi con consultas parametrizadas; duplicados con UNIQUE;
+   exposición con permisos/separación; XSS con renderizado seguro pendiente;
+   control de acceso HTTP con la integración pendiente. Distingue estado real.
+6. Capturas o registros de Docker no-root, volumen, redes, Swagger, AWS y pipeline.
+7. Lista de pendientes y límites del análisis, sin esconder fallos.
+
+El test test_sqli_and_xss_json guarda una etiqueta script como texto JSON y
+comprueba su transporte; NO prueba un navegador ni prevención completa de XSS.
+La especificación PAC lo menciona: valida la estrategia con el docente. Cuando
+haya frontend, comprueba que muestre texto escapado, sin ejecutar las etiquetas.
+No hagas reemplazos de tildes o apóstrofos como falsa “sanitización SQL”.
+
+4. CUANDO PUEDES DAR LA EVALUACION POR COMPLETA
+
+[ ] Paginación rechaza el valor excesivo y la suite sigue aprobada.
+[ ] Docker construye la API en dos etapas y la ejecuta como usuario no root.
+[ ] Compose levanta backend + BD; usa red interna y volumen persistente.
+[ ] Las credenciales no están en Git ni en la imagen.
+[ ] Backend + BD funcionan en AWS y los Security Groups están restringidos.
+[ ] Un push dispara build, pruebas y seguridad; main despliega un tag identificable.
+[ ] Existe el informe formal con diagrama, ISO 27034, OWASP y evidencia real.
+
+Esta receta propone cómo cerrar los faltantes. No convierte esas casillas en
+hechas por haber creado plantillas. La calificación final corresponde al docente.
+
+5. FUENTES PARA LAS PLANTILLAS Y SU COMPROBACION
+
+Pauta y especificación: documentos locales indicados al comienzo.
+Código/evidencia: inventario-revisado.json y Evidencia de revision.txt.
+Documentación oficial consultada para las propuestas:
+- Multi-stage: https://docs.docker.com/build/building/multi-stage/
+- USER: https://docs.docker.com/reference/dockerfile/#user
+- Redes: https://docs.docker.com/reference/compose-file/networks/
+- Contexto: https://docs.docker.com/build/concepts/context/
+- Imágenes GHCR: https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images
+- Security Groups: https://docs.aws.amazon.com/vpc/latest/userguide/vpc-security-groups.html
+- Bandit: https://bandit.readthedocs.io/en/latest/start.html
+- pip-audit: https://github.com/pypa/pip-audit

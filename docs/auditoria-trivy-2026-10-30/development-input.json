@@ -1,0 +1,5 @@
+{
+  "description": "Flattened requirements.txt + requirements-dev.txt, removing only the -r requirements.txt line",
+  "sha256": "0b044e0ed917d64b48fe9a339d3f820b314b72841bdf82129c0e0c05f01853fd",
+  "packages": 33
+}

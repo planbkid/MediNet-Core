@@ -1,0 +1,32 @@
+PLANTILLAS PROPUESTAS; NO SON CONFIGURACION YA APLICADA.
+
+No se construyó la imagen ni se ejecutó GitHub Actions/AWS durante esta revisión.
+Validar primero en local. No sustituyen la integración IAM/AUD.
+
+Dockerfile: imagen en dos etapas; backend con UID 10001.
+.dockerignore: solo permite el código necesario; excluye .env y documentación.
+compose.eva02.yml: base nueva para evaluar contenedores; no migra datos de Podman.
+.env.eva02.example: solo marcadores; las contraseñas reales son distintas y locales.
+ci-cd.yml: prueba, escanea, construye/publica GHCR y despliega por SSH en main.
+
+Prerequisitos del job deploy:
+1. EC2 con Docker/Compose instalados y usuario con permiso para ejecutarlos.
+2. ~/MediNet-Core-EVA02/.env.eva02 completado en EC2, permisos 600.
+3. Primera migración y rol limitado configurados antes del primer deploy.
+4. Acceso de EC2 a GHCR: paquete público o docker login local con lectura.
+5. Secrets del environment production: EC2_HOST, EC2_USER, EC2_SSH_KEY,
+   EC2_KNOWN_HOSTS. Validar la clave de host por un canal confiable.
+6. Registrar un runner Linux propio con etiqueta medinet-deploy y salida
+   fija o VPN. El deploy usa ese runner; pruebas/build usan GitHub-hosted.
+   SSH debe ser alcanzable desde el runner. Autorizar solo su procedencia,
+   no abrir 22 a todo Internet. El runner necesita bash, git, ssh y scp.
+7. La API no tiene autenticación HTTP. Para esta demo, usar solo datos
+   ficticios y acceso restringido por Security Group. HTTPS/IAM requieren
+   configuración adicional antes de un uso real.
+8. El chequeo del despliegue comprueba /patients dentro del contenedor;
+   verificar además la URL de EC2 desde un equipo autorizado.
+
+El pipeline no fuerza aprobación manual: no es requisito de la pauta.
+No desactivar comprobaciones SSH ni ignorar fallos de escáner para verlo verde.
+Los escáneres deben fijarse a versiones acordadas tras probar su instalación;
+las acciones pueden fijarse a SHA verificados para mayor reproducibilidad.
