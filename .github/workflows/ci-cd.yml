@@ -136,5 +136,12 @@ jobs:
             docker compose --env-file .env.docker -f compose.docker.yml --profile tools run --rm migrate
             docker compose --env-file .env.docker -f compose.docker.yml up -d api
             docker compose --env-file .env.docker -f compose.docker.yml ps
-            curl --fail --silent http://127.0.0.1:18082/health && echo " <- API OK"
+            echo "Esperando a que la API responda..."
+            for i in $(seq 1 20); do
+              if curl --fail --silent http://127.0.0.1:18082/health; then
+                echo " <- API OK"; exit 0
+              fi
+              sleep 3
+            done
+            echo "La API no respondio a tiempo"; exit 1
           '
